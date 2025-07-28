@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { NavLink, Link } from 'react-router-dom';
 import { Home, MessageSquare, Users, Briefcase, LogOut, Settings } from 'lucide-react'; // Import Settings icon
 import { useAuth } from '../context/AuthContext';
