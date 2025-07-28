@@ -1,5 +1,5 @@
 // src/components/GroupAdminModal.tsx
-import React from 'react';
+
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { X, UserX, ShieldAlert, Trash2 } from 'lucide-react';
