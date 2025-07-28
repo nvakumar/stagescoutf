@@ -1,8 +1,9 @@
-import  { useState, useEffect } from 'react';
+// src/components/NotificationsDropdown.tsx
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { Link } from 'react-router-dom';
-import { Bell, Briefcase, XCircle } from 'lucide-react'; // Example icons
+import { XCircle } from 'lucide-react';
 
 // Define the shape of the Notification data
 interface Notification {
@@ -10,7 +11,7 @@ interface Notification {
   applicant: {
     _id: string;
     fullName: string;
-    avatar?: string; // Added avatar as it might be populated
+    avatar?: string;
   };
   castingCall: {
     _id: string;
@@ -38,8 +39,7 @@ const NotificationsDropdown = () => {
       setIsLoading(true);
       setError('');
       try {
-        // Corrected API endpoint for fetching notifications
-        const response = await api.get('/api/casting-calls/notifications', { 
+        const response = await api.get('/api/casting-calls/notifications', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setNotifications(response.data);
@@ -54,16 +54,7 @@ const NotificationsDropdown = () => {
     fetchNotifications();
   }, [token]);
 
-  // Helper function to render notification icon based on type (reused from NotificationsPage)
-  // This function is now less critical as we're using the applicant's avatar directly
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'application':
-        return <Briefcase size={20} className="text-indigo-400 flex-shrink-0 mt-1" />;
-      default:
-        return <Bell size={20} className="text-gray-400 flex-shrink-0 mt-1" />;
-    }
-  };
+  // --- FIX: Removed the unused getNotificationIcon function ---
 
   return (
     <div className="absolute top-14 right-0 mt-2 w-80 bg-gray-800 rounded-lg shadow-lg py-2 z-20 border border-gray-700 max-h-96 overflow-y-auto">
@@ -74,16 +65,15 @@ const NotificationsDropdown = () => {
         <p className="p-4 text-red-400 flex items-center"><XCircle size={16} className="mr-2"/> {error}</p>
       ) : notifications.length > 0 ? (
         notifications.map((notif) => (
-          <Link 
-            to={`/profile/${notif.applicant._id}`} // Link to applicant's profile
-            key={notif._id} 
+          <Link
+            to={`/profile/${notif.applicant._id}`}
+            key={notif._id}
             className={`flex items-start space-x-3 px-4 py-3 hover:bg-gray-700/50 transition-colors duration-150 border-b border-gray-700 last:border-b-0 ${notif.status === 'unread' ? 'bg-indigo-900/20' : ''}`}
           >
-            {/* Display applicant's avatar */}
-            <img 
-              src={notif.applicant.avatar || `https://placehold.co/50x50/1a202c/ffffff?text=${notif.applicant.fullName.charAt(0)}`} 
-              alt={notif.applicant.fullName} 
-              className="w-10 h-10 rounded-full object-cover flex-shrink-0" 
+            <img
+              src={notif.applicant.avatar || `https://placehold.co/50x50/1a202c/ffffff?text=${notif.applicant.fullName.charAt(0)}`}
+              alt={notif.applicant.fullName}
+              className="w-10 h-10 rounded-full object-cover flex-shrink-0"
             />
             <div>
               <p className="text-sm text-gray-300">
@@ -101,8 +91,8 @@ const NotificationsDropdown = () => {
       ) : (
         <p className="p-4 text-gray-400">No new notifications.</p>
       )}
-      <Link 
-        to="/notifications" 
+      <Link
+        to="/notifications"
         className="block text-center py-2 text-sm text-indigo-400 hover:text-indigo-300 border-t border-gray-700"
       >
         View All Notifications
