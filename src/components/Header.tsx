@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import  { useState, useEffect, useRef } from 'react';
 import { Search, Bell, MessageSquare, User } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom'; // Import Link for navigation
 import { useAuth } from '../context/AuthContext'; // Import useAuth to get user ID for profile
