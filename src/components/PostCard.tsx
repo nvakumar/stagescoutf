@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { ThumbsUp, MessageCircle, Share2, Trash2, Edit, MoreVertical,  Check } from 'lucide-react';
+import { ThumbsUp, MessageCircle, Share2, Trash2, Edit, MoreVertical, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-// FIX: Corrected import paths
-import CommentSection from '../components/CommentSection';
-import EditPostModal from '../components/EditPostModal';
+import CommentSection from './CommentSection';
+import EditPostModal from './EditPostModal';
 
 // Define the shape of the Post data coming from the API
 interface PostAuthor {
@@ -46,7 +45,7 @@ const Toast = ({ message, onDone }: { message: string; onDone: () => void }) => 
   }, [onDone]);
 
   return (
-    <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in z-50">
+    <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in z-50 border border-gray-700">
       <Check size={18} className="text-green-400" />
       <span>{message}</span>
     </div>
@@ -204,13 +203,13 @@ const PostCard = ({ post, onPostDeleted, onPostUpdated, groupAdminId }: PostCard
 
         {/* Card Body */}
         <div className="px-3 sm:px-4 pb-2">
-          <p className="text-lg text-gray-200 mb-2">{post.title}</p>
+          <p className="text-lg md:text-xl text-gray-200 mb-2">{post.title}</p>
           {post.description && <p className="text-sm text-gray-400 mb-2 whitespace-pre-wrap">{post.description}</p>}
         </div>
         {post.mediaUrl && (
-          <div className="bg-gray-900/50">
+          <div className="bg-black">
             {post.mediaType === 'Photo' ? (
-              <img src={post.mediaUrl} alt={post.title} className="w-full h-auto max-h-[75vh] object-cover" />
+              <img src={post.mediaUrl} alt={post.title} className="w-full h-auto max-h-[75vh] object-contain" />
             ) : (
               <video src={post.mediaUrl} controls className="w-full h-auto max-h-[75vh] object-contain">
                 Your browser does not support the video tag.
