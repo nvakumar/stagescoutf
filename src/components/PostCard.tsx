@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ThumbsUp, MessageCircle, Share2, Trash2, Edit, MoreVertical, Check } from 'lucide-react';
+import { MessageCircle, Send, Bookmark, Trash2, Edit, MoreVertical, Heart,  Check, Share2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
@@ -158,21 +158,18 @@ const PostCard = ({ post, onPostDeleted, onPostUpdated, groupAdminId }: PostCard
   return (
     <>
       {toastMessage && <Toast message={toastMessage} onDone={() => setToastMessage(null)} />}
-      <div className="bg-gray-800 rounded-lg shadow-lg border border-gray-700/50 overflow-hidden mb-6 transition-shadow hover:shadow-indigo-500/10">
+      <div className="bg-gray-800 rounded-lg shadow-lg border border-gray-700/50 overflow-hidden mb-6">
         {/* Card Header */}
         <div className="p-3 sm:p-4 flex items-center justify-between">
           <Link to={`/profile/${post.user._id}`} className="flex items-center space-x-3 group">
-            <div className="relative">
-              <img
-                src={authorAvatar}
-                alt={post.user.fullName}
-                className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover bg-gray-900 border-2 border-transparent group-hover:border-indigo-500 transition-all"
-              />
-              <div className="absolute inset-0 rounded-full border-2 border-indigo-600 group-hover:scale-110 transition-transform duration-300 opacity-0 group-hover:opacity-100"></div>
-            </div>
+            <img
+              src={authorAvatar}
+              alt={post.user.fullName}
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover bg-gray-900"
+            />
             <div>
-              <p className="font-bold text-white group-hover:text-indigo-400 transition-colors text-base sm:text-lg">{post.user.fullName}</p>
-              <p className="text-sm text-gray-400">{post.user.role}</p>
+              <p className="font-bold text-white group-hover:underline text-sm sm:text-base">{post.user.fullName}</p>
+              <p className="text-xs text-gray-400">{post.user.role}</p>
             </div>
           </Link>
           {canModifyPost && (
@@ -201,63 +198,55 @@ const PostCard = ({ post, onPostDeleted, onPostUpdated, groupAdminId }: PostCard
           )}
         </div>
 
-        {/* Card Body */}
-        <div className="px-3 sm:px-4 pb-2">
-          <p className="text-lg md:text-xl text-gray-200 mb-2">{post.title}</p>
-          {post.description && <p className="text-sm text-gray-400 mb-2 whitespace-pre-wrap">{post.description}</p>}
-        </div>
-        
-        {/* FIX: Enhanced Media Container for better PC view */}
+        {/* Media Container */}
         {post.mediaUrl && (
           <div className="bg-black">
             {post.mediaType === 'Photo' ? (
-              <img 
-                src={post.mediaUrl} 
-                alt={post.title} 
-                // Use object-contain to prevent cropping, ensuring the whole image is visible
-                className="w-full h-auto max-h-[75vh] object-contain" 
-              />
+              <img src={post.mediaUrl} alt={post.title} className="w-full h-auto max-h-[80vh] object-contain" />
             ) : (
-              <video 
-                src={post.mediaUrl} 
-                controls 
-                className="w-full h-auto max-h-[75vh] object-contain"
-              >
+              <video src={post.mediaUrl} controls className="w-full h-auto max-h-[80vh] object-contain">
                 Your browser does not support the video tag.
               </video>
             )}
           </div>
         )}
 
-        {/* Card Footer */}
+        {/* Action Bar & Post Info */}
         <div className="p-3 sm:p-4">
-          <div className="flex justify-between text-xs sm:text-sm text-gray-400 mb-2">
-            <span>{likeCount} {likeCount === 1 ? 'Like' : 'Likes'}</span>
-            <span>{comments.length} {comments.length === 1 ? 'Comment' : 'Comments'}</span>
-          </div>
-          <hr className="border-gray-700" />
-          <div className="grid grid-cols-2 gap-1 mt-1">
-            <button
-              onClick={handleLike}
-              className={`flex items-center justify-center space-x-2 text-sm px-3 py-2 rounded-md transition-colors duration-200 font-semibold ${
-                isLiked ? 'text-indigo-400 bg-indigo-900/30' : 'text-gray-300 hover:bg-gray-700/50'
-              }`}
-            >
-              <ThumbsUp size={20} className={`${isLiked ? 'fill-current' : 'fill-none'}`} />
-              <span>Like</span>
-            </button>
-            <button
-              onClick={() => setShowComments(!showComments)}
-              className={`flex items-center justify-center space-x-2 text-sm px-3 py-2 rounded-md transition-colors duration-200 font-semibold ${
-                showComments ? 'text-indigo-400 bg-indigo-900/30' : 'text-gray-300 hover:bg-gray-700/50'
-              }`}
-            >
-              <MessageCircle size={20} />
-              <span>Comment</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <button onClick={handleLike} className="group transform transition-transform hover:scale-110">
+                <Heart size={26} className={`transition-colors ${isLiked ? 'text-red-500 fill-current' : 'text-gray-300 group-hover:text-white'}`} />
+              </button>
+              <button onClick={() => setShowComments(!showComments)} className="group transform transition-transform hover:scale-110">
+                <MessageCircle size={26} className="text-gray-300 group-hover:text-white transition-colors" />
+              </button>
+              <button onClick={handleSharePost} className="group transform transition-transform hover:scale-110">
+                <Send size={26} className="text-gray-300 group-hover:text-white transition-colors" />
+              </button>
+            </div>
+            <button className="group transform transition-transform hover:scale-110">
+              <Bookmark size={26} className="text-gray-300 group-hover:text-white transition-colors" />
             </button>
           </div>
+
+          <p className="font-semibold text-white mt-3">{likeCount} {likeCount === 1 ? 'like' : 'likes'}</p>
+          
+          <p className="text-gray-300 mt-1">
+            <Link to={`/profile/${post.user._id}`} className="font-bold text-white hover:underline">{post.user.fullName}</Link>
+            <span className="ml-2 whitespace-pre-wrap">{post.title}</span>
+          </p>
+
+          {post.description && <p className="text-sm text-gray-400 mt-1 whitespace-pre-wrap">{post.description}</p>}
+
+          {comments.length > 0 && (
+            <button onClick={() => setShowComments(!showComments)} className="text-sm text-gray-400 mt-2 hover:underline">
+              View all {comments.length} comments
+            </button>
+          )}
         </div>
 
+        {/* Comment Section (collapsible) */}
         {showComments && (
           <CommentSection
             postId={post._id}
@@ -268,6 +257,7 @@ const PostCard = ({ post, onPostDeleted, onPostUpdated, groupAdminId }: PostCard
           />
         )}
 
+        {/* Modals */}
         {showConfirmDelete && (
           <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 animate-fade-in">
             <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-sm p-6 space-y-4 text-center animate-scale-in">
@@ -284,7 +274,6 @@ const PostCard = ({ post, onPostDeleted, onPostUpdated, groupAdminId }: PostCard
             </div>
           </div>
         )}
-
         {isEditPostModalOpen && (
           <EditPostModal
             isOpen={isEditPostModalOpen}
