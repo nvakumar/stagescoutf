@@ -52,16 +52,11 @@ const EditPostModal = ({ isOpen, onClose, onSuccess, post }: EditPostModalProps)
     setError('');
   }, [post]);
 
-  // Manage media preview URL and revoke on cleanup to prevent memory leaks
   useEffect(() => {
     if (newMediaFile) {
       const objectUrl = URL.createObjectURL(newMediaFile);
       setMediaPreviewUrl(objectUrl);
-
-      return () => {
-        URL.revokeObjectURL(objectUrl);
-        setMediaPreviewUrl('');
-      };
+      return () => URL.revokeObjectURL(objectUrl);
     } else {
       setMediaPreviewUrl(mediaUrl);
     }
@@ -74,45 +69,30 @@ const EditPostModal = ({ isOpen, onClose, onSuccess, post }: EditPostModalProps)
       const file = e.target.files[0];
       setNewMediaFile(file);
       setError('');
-      if (file.type.startsWith('image')) {
-        setMediaType('Photo');
-      } else if (file.type.startsWith('video')) {
-        setMediaType('Video');
-      } else {
-        setMediaType('');
-      }
+      if (file.type.startsWith('image')) setMediaType('Photo');
+      else if (file.type.startsWith('video')) setMediaType('Video');
+      else setMediaType('');
     }
   };
 
   const uploadMedia = async (): Promise<{ mediaUrl: string; mediaType: 'Photo' | 'Video' } | null> => {
     if (!newMediaFile || !token) return null;
-
     setIsUploadingMedia(true);
     const formData = new FormData();
     formData.append('file', newMediaFile);
-
     try {
-      const response = await api.post('/api/posts', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`,
-        },
+      // Assuming a dedicated upload endpoint for media files
+      const response = await api.post('/api/posts/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` },
       });
-      const uploadedData = {
-        mediaUrl: response.data.mediaUrl,
-        mediaType: response.data.mediaType,
-      };
+      const uploadedData = { mediaUrl: response.data.mediaUrl, mediaType: response.data.mediaType };
       setMediaUrl(uploadedData.mediaUrl);
       setMediaType(uploadedData.mediaType);
       setNewMediaFile(null);
       return uploadedData;
-    } catch (err: unknown) {
+    } catch (err) {
       console.error('Failed to upload new media:', err);
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('Failed to upload new media.');
-      }
+      setError('Failed to upload new media.');
       return null;
     } finally {
       setIsUploadingMedia(false);
@@ -123,16 +103,13 @@ const EditPostModal = ({ isOpen, onClose, onSuccess, post }: EditPostModalProps)
     e.preventDefault();
     setError('');
     setIsSubmitting(true);
-
     if (!token) {
       setError('You must be logged in to edit a post.');
       setIsSubmitting(false);
       return;
     }
-
     let finalMediaUrl = mediaUrl;
     let finalMediaType = mediaType;
-
     try {
       if (newMediaFile) {
         const uploadedMedia = await uploadMedia();
@@ -144,31 +121,17 @@ const EditPostModal = ({ isOpen, onClose, onSuccess, post }: EditPostModalProps)
           return;
         }
       }
-
-      const response = await api.put(
-        `/api/posts/${post._id}`,
-        {
-          title,
-          description,
-          mediaUrl: finalMediaUrl,
-          mediaType: finalMediaType,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
+      const response = await api.put(`/api/posts/${post._id}`, {
+        title,
+        description,
+        mediaUrl: finalMediaUrl,
+        mediaType: finalMediaType,
+      }, { headers: { Authorization: `Bearer ${token}` } });
       onSuccess(response.data);
       onClose();
-    } catch (err: unknown) {
+    } catch (err) {
       console.error('Failed to update post:', err);
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('Failed to update post. Please try again.');
-      }
+      setError('Failed to update post. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -176,22 +139,22 @@ const EditPostModal = ({ isOpen, onClose, onSuccess, post }: EditPostModalProps)
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-700 flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-white">Edit Post</h2>
+      <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
+        {/* Modal Header */}
+        <div className="p-4 sm:p-6 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
+          <h2 className="text-xl sm:text-2xl font-bold text-white">Edit Post</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white" aria-label="Close modal">
             <X size={24} />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+
+        {/* Modal Body */}
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto">
           {error && (
             <div className="p-3 text-sm text-red-200 bg-red-900/50 border border-red-500/50 rounded-md">{error}</div>
           )}
-          {/* Title */}
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-300">
-              Title
-            </label>
+            <label htmlFor="title" className="block text-sm font-medium text-gray-300">Title</label>
             <input
               type="text"
               name="title"
@@ -202,12 +165,8 @@ const EditPostModal = ({ isOpen, onClose, onSuccess, post }: EditPostModalProps)
               className="mt-1 w-full p-2 text-white bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
-
-          {/* Description */}
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-300">
-              Description (Optional)
-            </label>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-300">Description (Optional)</label>
             <textarea
               name="description"
               id="description"
@@ -217,68 +176,49 @@ const EditPostModal = ({ isOpen, onClose, onSuccess, post }: EditPostModalProps)
               className="mt-1 w-full p-2 text-white bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y"
             ></textarea>
           </div>
-
-          {/* Media Preview and Upload */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">Current Media</label>
             {mediaPreviewUrl ? (
               mediaType === 'Photo' ? (
-                <img
-                  src={mediaPreviewUrl}
-                  alt="Current Media"
-                  className="w-full h-48 object-cover rounded-md mb-2"
-                />
+                <img src={mediaPreviewUrl} alt="Current Media" className="w-full h-48 object-cover rounded-md mb-2" />
               ) : (
-                <video
-                  src={mediaPreviewUrl}
-                  controls
-                  className="w-full h-48 object-contain bg-black rounded-md mb-2"
-                >
+                <video src={mediaPreviewUrl} controls className="w-full h-48 object-contain bg-black rounded-md mb-2">
                   Your browser does not support the video tag.
                 </video>
               )
             ) : (
-              <p className="text-gray-400 mb-2">No media attached to this post.</p>
+              <p className="text-gray-400 mb-2 text-sm">No media attached.</p>
             )}
-
             <label
               htmlFor="media-upload"
-              className={`cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md flex items-center justify-center space-x-2 ${
-                isUploadingMedia ? 'opacity-75 cursor-wait' : ''
-              }`}
+              className={`cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md flex items-center justify-center space-x-2 text-sm sm:text-base ${isUploadingMedia ? 'opacity-75 cursor-wait' : ''}`}
             >
               <UploadCloud size={20} />
-              <span>{isUploadingMedia ? 'Uploading New Media...' : 'Upload New Photo/Video'}</span>
-              <input
-                id="media-upload"
-                type="file"
-                className="hidden"
-                onChange={handleFileChange}
-                accept="image/*,video/*"
-                disabled={isUploadingMedia}
-              />
+              <span>{isUploadingMedia ? 'Uploading...' : 'Upload New Media'}</span>
+              <input id="media-upload" type="file" className="hidden" onChange={handleFileChange} accept="image/*,video/*" disabled={isUploadingMedia} />
             </label>
-
             {newMediaFile && <p className="text-sm text-gray-400 mt-2">Selected: {newMediaFile.name}</p>}
           </div>
-
-          <div className="pt-4 flex justify-end space-x-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 font-bold text-gray-300 bg-gray-600 rounded-md hover:bg-gray-500"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting || isUploadingMedia}
-              className="px-4 py-2 font-bold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-gray-500"
-            >
-              {isSubmitting ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
         </form>
+
+        {/* Modal Footer */}
+        <div className="p-4 sm:p-6 border-t border-gray-700 flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-3 flex-shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full sm:w-auto mt-2 sm:mt-0 px-4 py-2 font-bold text-gray-300 bg-gray-600 rounded-md hover:bg-gray-500"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            disabled={isSubmitting || isUploadingMedia}
+            className="w-full sm:w-auto px-4 py-2 font-bold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-gray-500"
+          >
+            {isSubmitting ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
       </div>
     </div>
   );
