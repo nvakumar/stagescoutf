@@ -6,7 +6,7 @@ import CreatePost from '../components/CreatePost';
 import LeaderboardWidget from '../components/LeaderboardWidget';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import {  XCircle, Menu, X, Home, Award, FileText } from 'lucide-react';
+import { XCircle, Menu, X, Home, Award, FileText } from 'lucide-react';
 
 // Define types for the data used in this component
 interface PostAuthor {
@@ -30,12 +30,12 @@ interface Post {
   group?: { _id: string; admin: string };
 }
 
-// A new component for the loading state skeleton UI
+// Enhanced skeleton loader for a better loading experience
 const PostCardSkeleton = () => (
-  <div className="bg-gray-800 p-4 rounded-lg shadow-lg animate-pulse">
+  <div className="bg-gray-800 p-4 rounded-lg shadow-lg animate-pulse border border-gray-700/50">
     <div className="flex items-center space-x-4">
       <div className="w-16 h-16 bg-gray-700 rounded-full"></div>
-      <div className="space-y-2">
+      <div className="flex-1 space-y-2">
         <div className="w-40 h-4 bg-gray-700 rounded"></div>
         <div className="w-24 h-3 bg-gray-700 rounded"></div>
       </div>
@@ -47,7 +47,6 @@ const PostCardSkeleton = () => (
     <div className="w-full h-48 mt-4 bg-gray-700 rounded-md"></div>
   </div>
 );
-
 
 const FeedPage = () => {
   const [posts, setPosts] = useState<Post[]>([]);
