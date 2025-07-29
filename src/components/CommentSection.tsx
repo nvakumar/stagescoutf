@@ -1,4 +1,3 @@
-// src/components/CommentSection.tsx
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
@@ -17,16 +16,15 @@ interface Comment {
   createdAt: string;
 }
 
-// --- FIX 1: UPDATE THE PROPS ---
+// Define the props the component will receive
 type CommentSectionProps = {
   postId: string;
   postOwnerId: string;
   initialComments: Comment[];
   onCommentChange: (comments: Comment[]) => void;
-  groupAdminId?: string; // Add the groupAdminId prop
+  groupAdminId?: string;
 };
 
-// --- FIX 2: UPDATE THE COMPONENT SIGNATURE ---
 const CommentSection = ({ postId, postOwnerId, initialComments, onCommentChange, groupAdminId }: CommentSectionProps) => {
   const { user, token } = useAuth();
   const [newComment, setNewComment] = useState('');
@@ -73,10 +71,10 @@ const CommentSection = ({ postId, postOwnerId, initialComments, onCommentChange,
   const userAvatar = user?.avatar || `https://placehold.co/100x100/1a202c/ffffff?text=${user?.fullName?.charAt(0)}`;
 
   return (
-    <div className="px-4 pb-4 pt-2 border-t border-gray-700">
+    <div className="px-3 sm:px-4 pb-4 pt-2 border-t border-gray-700">
       {/* Add a Comment Form */}
-      <form onSubmit={handleSubmitComment} className="flex items-start space-x-3 mt-4">
-        <img src={userAvatar} alt="Your avatar" className="w-9 h-9 rounded-full" />
+      <form onSubmit={handleSubmitComment} className="flex items-start space-x-2 sm:space-x-3 mt-4">
+        <img src={userAvatar} alt="Your avatar" className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover" />
         <textarea
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
@@ -87,7 +85,7 @@ const CommentSection = ({ postId, postOwnerId, initialComments, onCommentChange,
         <button
           type="submit"
           disabled={isSubmitting || !newComment.trim()}
-          className="px-4 py-2 text-sm font-bold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-gray-500"
+          className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-gray-500"
         >
           Post
         </button>
@@ -96,25 +94,24 @@ const CommentSection = ({ postId, postOwnerId, initialComments, onCommentChange,
       {/* List of Comments */}
       <div className="mt-4 space-y-4">
         {initialComments.map((comment) => (
-          <div key={comment._id} className="flex items-start space-x-3 group">
+          <div key={comment._id} className="flex items-start space-x-2 sm:space-x-3 group">
             <img
               src={comment.user.avatar || `https://placehold.co/100x100/1a202c/ffffff?text=${comment.user.fullName.charAt(0)}`}
               alt={comment.user.fullName}
-              className="w-9 h-9 rounded-full"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover"
             />
-            <div className="flex-grow p-3 bg-gray-700 rounded-lg">
+            <div className="flex-grow p-2 sm:p-3 bg-gray-700 rounded-lg">
               <p className="font-semibold text-sm text-white">{comment.user.fullName}</p>
-              <p className="text-sm text-gray-300">{comment.text}</p>
+              <p className="text-sm text-gray-300 break-words">{comment.text}</p>
             </div>
-            {/* --- FIX 3: UPDATE THE DELETE LOGIC --- */}
             {user && (
-                comment.user._id === user._id ||   // The comment author
-                postOwnerId === user._id ||         // The post owner
-                groupAdminId === user._id           // The group admin
+                comment.user._id === user._id ||
+                postOwnerId === user._id ||
+                groupAdminId === user._id
             ) && (
               <button
                 onClick={() => handleDeleteComment(comment._id)}
-                className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1"
               >
                 <Trash2 size={16} />
               </button>
