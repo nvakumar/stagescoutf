@@ -1,5 +1,4 @@
-// src/components/CreateCastingCallModal.tsx
-import  { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { X } from 'lucide-react';
@@ -51,18 +50,20 @@ const CreateCastingCallModal = ({ onClose, onSuccess }: CreateCastingCallModalPr
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-700 flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-white">Post a New Casting Call</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+        {/* Modal Header */}
+        <div className="p-4 sm:p-6 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
+          <h2 className="text-xl sm:text-2xl font-bold text-white">Post a New Casting Call</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
             <X size={24} />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+
+        {/* Modal Body */}
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto">
           {error && <div className="p-3 text-sm text-red-200 bg-red-900/50 border border-red-500/50 rounded-md">{error}</div>}
           
-          {/* Form Fields */}
           <div>
             <label htmlFor="projectTitle" className="block text-sm font-medium text-gray-300">Project Title</label>
             <input type="text" name="projectTitle" id="projectTitle" value={formData.projectTitle} onChange={handleChange} required className="mt-1 w-full p-2 text-white bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
@@ -109,16 +110,17 @@ const CreateCastingCallModal = ({ onClose, onSuccess }: CreateCastingCallModalPr
             <label htmlFor="contactEmail" className="block text-sm font-medium text-gray-300">Contact Email</label>
             <input type="email" name="contactEmail" id="contactEmail" value={formData.contactEmail} onChange={handleChange} required className="mt-1 w-full p-2 text-white bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
           </div>
-
-          <div className="pt-4 flex justify-end space-x-3">
-            <button type="button" onClick={onClose} className="px-4 py-2 font-bold text-gray-300 bg-gray-600 rounded-md hover:bg-gray-500">
-              Cancel
-            </button>
-            <button type="submit" disabled={isSubmitting} className="px-4 py-2 font-bold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-gray-500">
-              {isSubmitting ? 'Posting...' : 'Post Casting Call'}
-            </button>
-          </div>
         </form>
+
+        {/* Modal Footer */}
+        <div className="p-4 sm:p-6 border-t border-gray-700 flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-3 flex-shrink-0">
+          <button type="button" onClick={onClose} className="w-full sm:w-auto mt-2 sm:mt-0 px-4 py-2 font-bold text-gray-300 bg-gray-600 rounded-md hover:bg-gray-500">
+            Cancel
+          </button>
+          <button type="submit" onClick={handleSubmit} disabled={isSubmitting} className="w-full sm:w-auto px-4 py-2 font-bold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-gray-500">
+            {isSubmitting ? 'Posting...' : 'Post Casting Call'}
+          </button>
+        </div>
       </div>
     </div>
   );
