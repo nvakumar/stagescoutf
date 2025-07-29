@@ -1,12 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
-import { ThumbsUp, MessageCircle, Share2, Trash2, Edit, MoreVertical } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useState, useEffect, useCallback } from 'react';
+import Header from '../components/Header';
+import LeftSidebar from '../components/LeftSidebar';
+import PostCard from '../components/PostCard';
+import CreatePost from '../components/CreatePost';
+import LeaderboardWidget from '../components/LeaderboardWidget';
 import api from '../services/api';
-import CommentSection from './CommentSection';
-import EditPostModal from './EditPostModal';
+import { useAuth } from '../context/AuthContext';
+import { Loader2, XCircle, Menu, X, Home, Award, FileText } from 'lucide-react';
 
-// Define the shape of the Post data coming from the API
+// Define types for the data used in this component
 interface PostAuthor {
   _id: string;
   fullName: string;
@@ -23,248 +25,183 @@ interface Post {
   mediaUrl?: string;
   mediaType?: 'Photo' | 'Video';
   likes: string[];
-  comments: { _id: string; user: PostAuthor; text: string; createdAt: string; }[];
-  group?: { _id: string; admin: string; };
+  comments: { _id: string; user: PostAuthor; text: string; createdAt: string }[];
   reactions: any[];
+  group?: { _id: string; admin: string };
 }
 
-type PostCardProps = {
-  post: Post;
-  onPostDeleted: (postId: string) => void;
-  onPostUpdated: (updatedPost: Post) => void;
-  groupAdminId?: string;
-};
+// A new component for the loading state skeleton UI
+const PostCardSkeleton = () => (
+  <div className="bg-gray-800 p-4 rounded-lg shadow-lg animate-pulse">
+    <div className="flex items-center space-x-4">
+      <div className="w-16 h-16 bg-gray-700 rounded-full"></div>
+      <div className="space-y-2">
+        <div className="w-40 h-4 bg-gray-700 rounded"></div>
+        <div className="w-24 h-3 bg-gray-700 rounded"></div>
+      </div>
+    </div>
+    <div className="mt-4 space-y-3">
+      <div className="w-full h-5 bg-gray-700 rounded"></div>
+      <div className="w-3/4 h-5 bg-gray-700 rounded"></div>
+    </div>
+    <div className="w-full h-48 mt-4 bg-gray-700 rounded-md"></div>
+  </div>
+);
 
-const PostCard = ({ post, onPostDeleted, onPostUpdated, groupAdminId }: PostCardProps) => {
-  const { user: currentUser, token } = useAuth();
 
-  const [isLiked, setIsLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(post.likes.length);
-  const [showComments, setShowComments] = useState(false);
-  const [comments, setComments] = useState(post.comments);
-  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const [isEditPostModalOpen, setIsEditPostModalOpen] = useState(false);
+const FeedPage = () => {
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [activeMobileTab, setActiveMobileTab] = useState<'feed' | 'leaderboard'>('feed');
 
-  useEffect(() => {
-    if (currentUser) {
-      setIsLiked(post.likes.includes(currentUser._id));
-      setLikeCount(post.likes.length);
-    }
-  }, [currentUser, post.likes]);
+  const { token, user: currentUser } = useAuth();
 
-  useEffect(() => {
-    setComments(post.comments);
-  }, [post.comments]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setShowMenu(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  const handleLike = async () => {
-    if (!currentUser) {
-      alert('You must be logged in to like a post.');
-      return;
-    }
-    const originalIsLiked = isLiked;
-    const originalLikeCount = likeCount;
-    setIsLiked(!originalIsLiked);
-    setLikeCount(originalIsLiked ? originalLikeCount - 1 : originalLikeCount + 1);
-    try {
-      await api.put(`/api/posts/${post._id}/like`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-    } catch (error) {
-      console.error("Failed to update like status:", error);
-      setIsLiked(originalIsLiked);
-      setLikeCount(originalLikeCount);
-      alert('Failed to like the post. Please try again.');
-    }
-  };
-
-  const handleCommentChange = (updatedComments: any[]) => {
-    setComments(updatedComments);
-  };
-
-  const handleDeletePost = async () => {
+  const fetchPosts = useCallback(async () => {
     if (!token) {
-      alert('You must be logged in to delete a post.');
+      setIsLoading(false);
       return;
     }
-    setShowConfirmDelete(false);
-    setShowMenu(false);
+    setIsLoading(true);
+    setError(null);
     try {
-      await api.delete(`/api/posts/${post._id}`, {
+      const response = await api.get<Post[]>('/api/posts', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      onPostDeleted(post._id);
-    } catch (error: any) {
-      console.error("Failed to delete post:", error);
-      alert(error.response?.data?.message || 'Failed to delete post. Please try again.');
+      setPosts(response.data);
+    } catch (err) {
+      console.error('Failed to fetch posts:', err);
+      setError('Failed to load the feed. Please try again later.');
+    } finally {
+      setIsLoading(false);
     }
+  }, [token]);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
+  
+  useEffect(() => {
+    if (!currentUser) return;
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.user._id === currentUser._id
+          ? {
+              ...post,
+              user: {
+                ...post.user,
+                fullName: currentUser.fullName,
+                avatar: currentUser.profilePictureUrl || currentUser.avatar,
+              },
+            }
+          : post
+      )
+    );
+  }, [currentUser]);
+
+  const handlePostDeleted = (deletedPostId: string) => {
+    setPosts((prev) => prev.filter((post) => post._id !== deletedPostId));
   };
 
-  const handleEditPost = () => {
-    setIsEditPostModalOpen(true);
-    setShowMenu(false);
+  const handlePostUpdated = (updatedPost: Post) => {
+    setPosts((prev) =>
+      prev.map((post) => (post._id === updatedPost._id ? updatedPost : post))
+    );
   };
-
-  const onPostEditSuccess = (updatedPost: Post) => {
-    onPostUpdated(updatedPost);
-    setIsEditPostModalOpen(false);
-  };
-
-  const handleSharePost = () => {
-    setShowMenu(false);
-    const postUrl = `${window.location.origin}/post/${post._id}`;
-    navigator.clipboard.writeText(postUrl)
-      .then(() => alert('Post link copied to clipboard!'))
-      .catch(() => alert('Failed to copy link.'));
-  };
-
-  const authorAvatar = post.user.profilePictureUrl || post.user.avatar || `https://placehold.co/100x100/1a202c/ffffff?text=${post.user.fullName.charAt(0)}`;
-
-  const isPostOwner = currentUser && post.user._id === currentUser._id;
-  const effectiveGroupAdminId = groupAdminId || post.group?.admin;
-  const isGroupAdmin = currentUser && effectiveGroupAdminId === currentUser._id;
-  const canModifyPost = isPostOwner || isGroupAdmin;
 
   return (
-    <div className="bg-gray-800 rounded-lg shadow-lg border border-gray-700/50 overflow-hidden mb-6 transition-shadow hover:shadow-indigo-500/10">
-      {/* Card Header */}
-      <div className="p-3 sm:p-4 flex items-center justify-between">
-        <Link to={`/profile/${post.user._id}`} className="flex items-center space-x-3 group">
-          <div className="relative">
-            <img
-              src={authorAvatar}
-              alt={post.user.fullName}
-              className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover bg-gray-900 border-2 border-transparent group-hover:border-indigo-500 transition-all"
-            />
-            <div className="absolute inset-0 rounded-full border-2 border-indigo-600 group-hover:scale-110 transition-transform duration-300 opacity-0 group-hover:opacity-100"></div>
-          </div>
-          <div>
-            <p className="font-bold text-white group-hover:text-indigo-400 transition-colors text-base sm:text-lg">{post.user.fullName}</p>
-            <p className="text-sm text-gray-400">{post.user.role}</p>
-          </div>
-        </Link>
-        {canModifyPost && (
-          <div className="relative" ref={menuRef}>
-            <button
-              onClick={() => setShowMenu(!showMenu)}
-              className="p-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
-              title="Post Options"
-            >
-              <MoreVertical size={20} />
-            </button>
-            {showMenu && (
-              <div className="absolute right-0 mt-2 w-48 bg-gray-700 rounded-md shadow-lg py-1 z-10 animate-fade-in-fast">
-                <button onClick={handleEditPost} className="w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-600 flex items-center space-x-2">
-                  <Edit size={16} /> <span>Edit Post</span>
-                </button>
-                <button onClick={handleSharePost} className="w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-600 flex items-center space-x-2">
-                  <Share2 size={16} /> <span>Share Post</span>
-                </button>
-                <button onClick={() => setShowConfirmDelete(true)} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900/50 hover:text-red-300 flex items-center space-x-2">
-                  <Trash2 size={16} /> <span>Delete Post</span>
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+    <div className="bg-gray-900 min-h-screen text-white">
+      <Header />
 
-      {/* Card Body */}
-      <div className="px-3 sm:px-4 pb-2">
-        <p className="text-lg text-gray-200 mb-2">{post.title}</p>
-        {post.description && <p className="text-sm text-gray-400 mb-2 whitespace-pre-wrap">{post.description}</p>}
-      </div>
-      {post.mediaUrl && (
-        <div className="bg-gray-900/50">
-          {post.mediaType === 'Photo' ? (
-            <img src={post.mediaUrl} alt={post.title} className="w-full h-auto max-h-[75vh] object-cover" />
-          ) : (
-            <video src={post.mediaUrl} controls className="w-full h-auto max-h-[75vh] object-contain">
-              Your browser does not support the video tag.
-            </video>
-          )}
-        </div>
-      )}
-
-      {/* Card Footer */}
-      <div className="p-3 sm:p-4">
-        <div className="flex justify-between text-xs sm:text-sm text-gray-400 mb-2">
-          <span>{likeCount} {likeCount === 1 ? 'Like' : 'Likes'}</span>
-          <span>{comments.length} {comments.length === 1 ? 'Comment' : 'Comments'}</span>
-        </div>
-        <hr className="border-gray-700" />
-        <div className="grid grid-cols-2 gap-1 mt-1">
-          <button
-            onClick={handleLike}
-            className={`flex items-center justify-center space-x-2 text-sm px-3 py-2 rounded-md transition-colors duration-200 font-semibold ${
-              isLiked ? 'text-indigo-400 bg-indigo-900/30' : 'text-gray-300 hover:bg-gray-700/50'
-            }`}
-          >
-            <ThumbsUp size={20} className={`${isLiked ? 'fill-current' : 'fill-none'}`} />
-            <span>Like</span>
-          </button>
-          <button
-            onClick={() => setShowComments(!showComments)}
-            className={`flex items-center justify-center space-x-2 text-sm px-3 py-2 rounded-md transition-colors duration-200 font-semibold ${
-              showComments ? 'text-indigo-400 bg-indigo-900/30' : 'text-gray-300 hover:bg-gray-700/50'
-            }`}
-          >
-            <MessageCircle size={20} />
-            <span>Comment</span>
-          </button>
-        </div>
-      </div>
-
-      {showComments && (
-        <CommentSection
-          postId={post._id}
-          initialComments={comments}
-          onCommentChange={handleCommentChange}
-          postOwnerId={post.user._id}
-          groupAdminId={effectiveGroupAdminId}
-        />
-      )}
-
-      {showConfirmDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-sm p-6 space-y-4 text-center animate-scale-in">
-            <h3 className="text-xl font-bold text-white">Confirm Deletion</h3>
-            <p className="text-gray-300">Are you sure you want to delete this post? This action cannot be undone.</p>
-            <div className="flex justify-center space-x-4 mt-6">
-              <button onClick={() => setShowConfirmDelete(false)} className="px-6 py-2 font-bold text-gray-300 bg-gray-600 rounded-md hover:bg-gray-500 transition-colors">
-                Cancel
-              </button>
-              <button onClick={handleDeletePost} className="px-6 py-2 font-bold text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors">
-                Delete
+      {/* Mobile Sidebar Drawer */}
+      {isSidebarOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 flex animate-fade-in">
+          <div className="w-64 bg-gray-900 border-r border-gray-800 h-full p-4 overflow-y-auto">
+            <div className="flex justify-end mb-4">
+              <button onClick={() => setIsSidebarOpen(false)} className="p-2 rounded-full hover:bg-gray-700">
+                <X size={24} />
               </button>
             </div>
+            <LeftSidebar />
           </div>
+          <div className="flex-1 bg-black/60" onClick={() => setIsSidebarOpen(false)}></div>
         </div>
       )}
 
-      {isEditPostModalOpen && (
-        <EditPostModal
-          isOpen={isEditPostModalOpen}
-          onClose={() => setIsEditPostModalOpen(false)}
-          onSuccess={onPostEditSuccess}
-          post={post}
-        />
-      )}
+      <main className="pt-20 container mx-auto px-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 lg:gap-8">
+          
+          <aside className="hidden lg:block lg:col-span-3">
+            <div className="sticky top-20">
+              <LeftSidebar />
+            </div>
+          </aside>
+
+          <div className="col-span-12 lg:col-span-6">
+            <div className="lg:hidden flex items-center justify-between mb-4">
+              <button onClick={() => setIsSidebarOpen(true)} className="flex items-center p-2 rounded-md hover:bg-gray-700">
+                <Menu size={24} />
+                <span className="ml-2 font-semibold">Menu</span>
+              </button>
+              <div className="flex bg-gray-800 rounded-lg p-1 border border-gray-700">
+                <button 
+                  onClick={() => setActiveMobileTab('feed')} 
+                  className={`px-3 py-1 text-sm font-semibold rounded-md flex items-center gap-2 transition-colors ${activeMobileTab === 'feed' ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-gray-700'}`}
+                >
+                  <Home size={16} /> Feed
+                </button>
+                <button 
+                  onClick={() => setActiveMobileTab('leaderboard')} 
+                  className={`px-3 py-1 text-sm font-semibold rounded-md flex items-center gap-2 transition-colors ${activeMobileTab === 'leaderboard' ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-gray-700'}`}
+                >
+                  <Award size={16} /> Top Talent
+                </button>
+              </div>
+            </div>
+
+            <div className={activeMobileTab === 'feed' ? 'block' : 'hidden lg:block'}>
+              <CreatePost onPostCreated={fetchPosts} />
+              {isLoading ? (
+                <div className="space-y-6 mt-6">
+                  <PostCardSkeleton />
+                  <PostCardSkeleton />
+                </div>
+              ) : error ? (
+                <div className="text-center mt-8 text-red-400 bg-red-900/20 p-4 rounded-lg flex items-center justify-center">
+                  <XCircle size={20} className="mr-2" /> {error}
+                </div>
+              ) : posts.length > 0 ? (
+                <div className="space-y-6 mt-6">
+                  {posts.map((post) => (
+                    <PostCard key={post._id} post={post} onPostDeleted={handlePostDeleted} onPostUpdated={handlePostUpdated} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center mt-8 p-8 bg-gray-800 rounded-lg border border-gray-700">
+                  <FileText size={48} className="mx-auto text-indigo-400" />
+                  <h3 className="text-xl font-semibold mt-4">Your Feed is Empty</h3>
+                  <p className="text-gray-400 mt-2">
+                    Follow other creators or be the first to share your work!
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className={activeMobileTab === 'leaderboard' ? 'block lg:hidden' : 'hidden'}>
+              <LeaderboardWidget />
+            </div>
+          </div>
+
+          <aside className="hidden lg:block lg:col-span-3">
+            <div className="sticky top-20">
+              <LeaderboardWidget />
+            </div>
+          </aside>
+        </div>
+      </main>
     </div>
   );
 };
 
-export default PostCard;
+export default FeedPage;
