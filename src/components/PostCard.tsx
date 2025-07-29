@@ -139,17 +139,20 @@ const PostCard = ({ post, onPostDeleted, onPostUpdated, groupAdminId }: PostCard
   const canModifyPost = isPostOwner || isGroupAdmin;
 
   return (
-    <div className="bg-gray-800 rounded-lg overflow-hidden mb-6">
+    <div className="bg-gray-800 rounded-lg shadow-lg border border-gray-700/50 overflow-hidden mb-6 transition-shadow hover:shadow-indigo-500/10">
       {/* Card Header */}
       <div className="p-3 sm:p-4 flex items-center justify-between">
-        <Link to={`/profile/${post.user._id}`} className="flex items-center space-x-3">
-          <img
-            src={authorAvatar}
-            alt={post.user.fullName}
-            className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 sm:border-4 border-indigo-600 object-cover bg-gray-900"
-          />
+        <Link to={`/profile/${post.user._id}`} className="flex items-center space-x-3 group">
+          <div className="relative">
+            <img
+              src={authorAvatar}
+              alt={post.user.fullName}
+              className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover bg-gray-900 border-2 border-transparent group-hover:border-indigo-500 transition-all"
+            />
+            <div className="absolute inset-0 rounded-full border-2 border-indigo-600 group-hover:scale-110 transition-transform duration-300 opacity-0 group-hover:opacity-100"></div>
+          </div>
           <div>
-            <p className="font-semibold text-white hover:underline text-base sm:text-lg">{post.user.fullName}</p>
+            <p className="font-bold text-white group-hover:text-indigo-400 transition-colors text-base sm:text-lg">{post.user.fullName}</p>
             <p className="text-sm text-gray-400">{post.user.role}</p>
           </div>
         </Link>
@@ -157,20 +160,20 @@ const PostCard = ({ post, onPostDeleted, onPostUpdated, groupAdminId }: PostCard
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="p-2 rounded-full text-gray-400 hover:bg-gray-700 transition-colors duration-200"
+              className="p-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
               title="Post Options"
             >
               <MoreVertical size={20} />
             </button>
             {showMenu && (
-              <div className="absolute right-0 mt-2 w-48 bg-gray-700 rounded-md shadow-lg py-1 z-10">
+              <div className="absolute right-0 mt-2 w-48 bg-gray-700 rounded-md shadow-lg py-1 z-10 animate-fade-in-fast">
                 <button onClick={handleEditPost} className="w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-600 flex items-center space-x-2">
                   <Edit size={16} /> <span>Edit Post</span>
                 </button>
                 <button onClick={handleSharePost} className="w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-600 flex items-center space-x-2">
                   <Share2 size={16} /> <span>Share Post</span>
                 </button>
-                <button onClick={() => setShowConfirmDelete(true)} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-600 flex items-center space-x-2">
+                <button onClick={() => setShowConfirmDelete(true)} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900/50 hover:text-red-300 flex items-center space-x-2">
                   <Trash2 size={16} /> <span>Delete Post</span>
                 </button>
               </div>
@@ -181,51 +184,50 @@ const PostCard = ({ post, onPostDeleted, onPostUpdated, groupAdminId }: PostCard
 
       {/* Card Body */}
       <div className="px-3 sm:px-4 pb-2">
-        <p className="text-gray-300 mb-2">{post.title}</p>
-        {post.description && <p className="text-sm text-gray-400 mb-2">{post.description}</p>}
+        <p className="text-lg text-gray-200 mb-2">{post.title}</p>
+        {post.description && <p className="text-sm text-gray-400 mb-2 whitespace-pre-wrap">{post.description}</p>}
       </div>
       {post.mediaUrl && (
-        post.mediaType === 'Photo' ? (
-          <img src={post.mediaUrl} alt={post.title} className="w-full h-auto max-h-[70vh] object-cover" />
-        ) : (
-          <video src={post.mediaUrl} controls className="w-full h-auto max-h-[70vh] object-contain bg-black">
-            Your browser does not support the video tag.
-          </video>
-        )
+        <div className="bg-gray-900/50">
+          {post.mediaType === 'Photo' ? (
+            <img src={post.mediaUrl} alt={post.title} className="w-full h-auto max-h-[75vh] object-cover" />
+          ) : (
+            <video src={post.mediaUrl} controls className="w-full h-auto max-h-[75vh] object-contain">
+              Your browser does not support the video tag.
+            </video>
+          )}
+        </div>
       )}
 
       {/* Card Footer */}
       <div className="p-3 sm:p-4">
         <div className="flex justify-between text-xs sm:text-sm text-gray-400 mb-2">
-          <span>{likeCount} Likes</span>
-          <span>{comments.length} Comments</span>
+          <span>{likeCount} {likeCount === 1 ? 'Like' : 'Likes'}</span>
+          <span>{comments.length} {comments.length === 1 ? 'Comment' : 'Comments'}</span>
         </div>
         <hr className="border-gray-700" />
-        <div className="flex justify-around mt-2">
-          {/* Like Button */}
+        <div className="grid grid-cols-2 gap-1 mt-1">
           <button
             onClick={handleLike}
-            className={`flex items-center space-x-2 text-sm px-3 py-2 rounded-md transition-colors duration-200 w-full justify-center ${
-              isLiked ? 'text-indigo-400 bg-indigo-900/20' : 'text-gray-300 hover:text-indigo-400 hover:bg-gray-700'
+            className={`flex items-center justify-center space-x-2 text-sm px-3 py-2 rounded-md transition-colors duration-200 font-semibold ${
+              isLiked ? 'text-indigo-400 bg-indigo-900/30' : 'text-gray-300 hover:bg-gray-700/50'
             }`}
           >
-            <ThumbsUp size={20} fill={isLiked ? 'currentColor' : 'none'} />
-            <span className="hidden sm:inline">Like</span>
+            <ThumbsUp size={20} className={`${isLiked ? 'fill-current' : 'fill-none'}`} />
+            <span>Like</span>
           </button>
-          {/* Comment Button */}
           <button
             onClick={() => setShowComments(!showComments)}
-            className={`flex items-center space-x-2 text-sm px-3 py-2 rounded-md transition-colors duration-200 w-full justify-center ${
-              showComments ? 'text-indigo-400 bg-indigo-900/20' : 'text-gray-300 hover:text-indigo-400 hover:bg-gray-700'
+            className={`flex items-center justify-center space-x-2 text-sm px-3 py-2 rounded-md transition-colors duration-200 font-semibold ${
+              showComments ? 'text-indigo-400 bg-indigo-900/30' : 'text-gray-300 hover:bg-gray-700/50'
             }`}
           >
             <MessageCircle size={20} />
-            <span className="hidden sm:inline">Comment</span>
+            <span>Comment</span>
           </button>
         </div>
       </div>
 
-      {/* Comment Section */}
       {showComments && (
         <CommentSection
           postId={post._id}
@@ -236,17 +238,16 @@ const PostCard = ({ post, onPostDeleted, onPostUpdated, groupAdminId }: PostCard
         />
       )}
 
-      {/* Delete Confirmation Modal */}
       {showConfirmDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-sm p-6 space-y-4 text-center">
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-sm p-6 space-y-4 text-center animate-scale-in">
             <h3 className="text-xl font-bold text-white">Confirm Deletion</h3>
             <p className="text-gray-300">Are you sure you want to delete this post? This action cannot be undone.</p>
             <div className="flex justify-center space-x-4 mt-6">
-              <button onClick={() => setShowConfirmDelete(false)} className="px-6 py-2 font-bold text-gray-300 bg-gray-600 rounded-md hover:bg-gray-500">
+              <button onClick={() => setShowConfirmDelete(false)} className="px-6 py-2 font-bold text-gray-300 bg-gray-600 rounded-md hover:bg-gray-500 transition-colors">
                 Cancel
               </button>
-              <button onClick={handleDeletePost} className="px-6 py-2 font-bold text-white bg-red-600 rounded-md hover:bg-red-700">
+              <button onClick={handleDeletePost} className="px-6 py-2 font-bold text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors">
                 Delete
               </button>
             </div>
@@ -254,7 +255,6 @@ const PostCard = ({ post, onPostDeleted, onPostUpdated, groupAdminId }: PostCard
         </div>
       )}
 
-      {/* Edit Post Modal */}
       {isEditPostModalOpen && (
         <EditPostModal
           isOpen={isEditPostModalOpen}
