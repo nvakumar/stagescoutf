@@ -1,15 +1,11 @@
-// tailwind.config.js
-module.exports = {
-  content: ['./src/**/*.{js,ts,jsx,tsx}'], // make sure all source files are included
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}", // This ensures all your component files are scanned
+  ],
   theme: {
     extend: {},
   },
-  variants: {
-    extend: {
-      backgroundColor: ['disabled'],
-      cursor: ['disabled'],
-      opacity: ['disabled'],
-    },
-  },
   plugins: [],
-};
+}
