@@ -6,7 +6,7 @@ import CreatePost from '../components/CreatePost';
 import LeaderboardWidget from '../components/LeaderboardWidget';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Loader2, XCircle, Menu, X, Home, Award, FileText } from 'lucide-react';
+import {  XCircle, Menu, X, Home, Award, FileText } from 'lucide-react';
 
 // Define types for the data used in this component
 interface PostAuthor {
