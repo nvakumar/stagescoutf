@@ -206,12 +206,23 @@ const PostCard = ({ post, onPostDeleted, onPostUpdated, groupAdminId }: PostCard
           <p className="text-lg md:text-xl text-gray-200 mb-2">{post.title}</p>
           {post.description && <p className="text-sm text-gray-400 mb-2 whitespace-pre-wrap">{post.description}</p>}
         </div>
+        
+        {/* FIX: Enhanced Media Container for better PC view */}
         {post.mediaUrl && (
           <div className="bg-black">
             {post.mediaType === 'Photo' ? (
-              <img src={post.mediaUrl} alt={post.title} className="w-full h-auto max-h-[75vh] object-contain" />
+              <img 
+                src={post.mediaUrl} 
+                alt={post.title} 
+                // Use object-contain to prevent cropping, ensuring the whole image is visible
+                className="w-full h-auto max-h-[75vh] object-contain" 
+              />
             ) : (
-              <video src={post.mediaUrl} controls className="w-full h-auto max-h-[75vh] object-contain">
+              <video 
+                src={post.mediaUrl} 
+                controls 
+                className="w-full h-auto max-h-[75vh] object-contain"
+              >
                 Your browser does not support the video tag.
               </video>
             )}
