@@ -14,13 +14,13 @@ import NotificationsPage from './pages/NotificationsPage.tsx';
 import GroupsPage from './pages/GroupsPage.tsx';
 import GroupDetailPage from './pages/GroupDetailPage.tsx';
 import MessagesPage from './pages/MessagesPage.tsx';
-import SettingsPage from './pages/SettingsPage.tsx';
+import SettingsPage from './pages/SettingsPage.tsx'; // Import the SettingsPage
 
 // Import components
 import ProtectedRoute from './components/ProtectedRoute.tsx';
 
 // Import CSS
-import './index.css'; // 👈 **FIX: Changed from './output.css' to './index.css'**
+import './output.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -41,7 +41,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/groups" element={<GroupsPage />} />
             <Route path="/groups/:id" element={<GroupDetailPage />} />
             <Route path="/messages" element={<MessagesPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/settings" element={<SettingsPage />} /> {/* Add the SettingsPage route */}
           </Route>
           
           {/* Default route redirects to login */}
