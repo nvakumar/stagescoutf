@@ -3,8 +3,9 @@ import { ThumbsUp, MessageCircle, Share2, Trash2, Edit, MoreVertical } from 'luc
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import CommentSection from './CommentSection';
-import EditPostModal from './EditPostModal';
+// FIX: Corrected import paths
+import CommentSection from '../components/CommentSection';
+import EditPostModal from '../components/EditPostModal';
 
 // Define the shape of the Post data coming from the API
 interface PostAuthor {
