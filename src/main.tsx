@@ -19,7 +19,6 @@ import SettingsPage from './pages/SettingsPage.tsx'; // Import the SettingsPage
 // Import components
 import ProtectedRoute from './components/ProtectedRoute.tsx';
 
-// Import CSS
 import './output.css';
 
 createRoot(document.getElementById('root')!).render(
