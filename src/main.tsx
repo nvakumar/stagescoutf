@@ -19,7 +19,7 @@ import SettingsPage from './pages/SettingsPage.tsx'; // Import the SettingsPage
 // Import components
 import ProtectedRoute from './components/ProtectedRoute.tsx';
 
-import './output.css';
+import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
